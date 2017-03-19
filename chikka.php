@@ -25,13 +25,13 @@ class Chikka {
 
     }
 
-    public function init () {
+    public function compose () {
 
         $this->ch = curl_init($this->url);
 
     }
 
-    public function recipient ($mobile_number) {
+    public function recipient (array $mobile_number) {
 
         $this->recipient = $mobile_number;
 
@@ -45,18 +45,27 @@ class Chikka {
 
     public function send () {
 
-        $this->fields["message"]       = $this->message;
-        $this->fields["message_id"]    = "123451235"; // Generate random (?)
-        $this->fields["mobile_number"] = $this->recipient;
+        $status = array ();
 
-        $fields_string = http_build_query(array_merge($this->fields, $this->config));
+        $this->fields["message"] = $this->message;
 
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $fields_string);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+        foreach ($this->recipient as $number) {
 
-        return curl_exec($this->ch);
+            $this->fields["message_id"]    = uniqid();
+            $this->fields["mobile_number"] = $number;
+
+            $fields_string = http_build_query(array_merge($this->fields, $this->config));
+
+            curl_setopt($this->ch, CURLOPT_POST, true);
+            curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true );
+            curl_setopt($this->ch, CURLOPT_POSTFIELDS, $fields_string);
+            curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $status[$number] = curl_exec($this->ch);
+
+        }
+
+        return $status;
 
     }
 
